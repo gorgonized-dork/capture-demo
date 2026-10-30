@@ -1,0 +1,15 @@
+# Secrets: never commit
+.env
+
+# Raw source pulls stay local; scraped article text is never committed
+runs/*/raw/
+
+# Caches
+__pycache__/
+*.pyc
+.cache/
+**/_cache/
+.venv/
+
+# Local tool settings
+.claude/
