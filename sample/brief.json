@@ -1,0 +1,18 @@
+{
+  "title": "Weekend hours and branch visits in Harrowmere Valley",
+  "type": "hypothesis",
+  "statement": "Extending Saturday and Sunday opening hours at Harrowmere Valley Library District branches increased weekend visits at those branches.",
+  "disproof": "Weekend visits at the extended-hours branches did not rise compared with the same months a year earlier, or rose no more than at branches whose hours did not change.",
+  "scope": {
+    "date_from": "2025-01-01",
+    "date_to": "2025-12-31",
+    "regions": ["North Valley", "South Valley"],
+    "units": ["Northgate Branch", "Millbrook Branch", "Stonecross Branch", "Linden Street Branch"]
+  },
+  "seed_terms": ["weekend hours", "extended hours", "Saturday", "Sunday", "weekend visits"],
+  "exclude_terms": ["book sale"],
+  "questions": [
+    "Which branches extended their weekend hours, and from what date?",
+    "Did any branch report flat or falling weekend visits after the change?"
+  ]
+}
