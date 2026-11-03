@@ -1,17 +1,20 @@
 # runs/
 
-One folder per research run, created from a research brief:
+One folder per pipeline run, created from a research brief:
 
-    python -m core.runs new sample/brief.json
+    python -m core.pipeline run --brief sample/brief.json --adapter fixture
 
-Each `runs/<slug>/` holds, today:
+Each `runs/<run-id>/` holds, today:
 
 - `brief.json`: a byte-for-byte copy of the brief, frozen for this run
-- `run.json`: the slug, creation time, the brief's SHA-256, and any
-  validation flags (for example `UNTESTED_HYPOTHESIS`)
+- `run.json`: the run id, slug, creation time, the brief's SHA-256, any
+  validation flags (for example `UNTESTED_HYPOTHESIS`), and what was
+  collected: adapter, mode, item count, and the snapshot's SHA-256
+- `sources.jsonl`: one line per collected source item, exactly as the
+  adapter returned it, with a SHA-256 of its body
 
-Planned in later build steps: approved queries, raw pulls, triage scores,
-extractions, the ledger, and rendered findings.
+The run id defaults to a slug of the brief title. An existing run folder is
+never overwritten; pass `--run-id <new-id>` to start a separate run.
 
-Raw pulls (`runs/<slug>/raw/`) are gitignored and never committed.
-An existing run folder is never overwritten.
+Planned: triage, the evidence ledger, field questions, the decision record,
+and the report.
