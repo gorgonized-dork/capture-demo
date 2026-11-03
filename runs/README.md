@@ -16,5 +16,8 @@ Each `runs/<run-id>/` holds, today:
 The run id defaults to a slug of the brief title. An existing run folder is
 never overwritten; pass `--run-id <new-id>` to start a separate run.
 
+Everything in `runs/` except this README is gitignored, because a run holds
+full source text. Deliberate synthetic examples belong under `sample/expected/`.
+
 Planned: triage, the evidence ledger, field questions, the decision record,
 and the report.
