@@ -1,6 +1,4 @@
 # state/
 
-Reserved for state that spans runs. What lives here is defined in build
-step 2 (seam and ledger).
-
-Empty until then.
+Empty. Reserved for state that spans runs. Today everything a run produces
+lives in its own folder under `runs/`, and nothing reads this folder.

@@ -1,5 +1,4 @@
 # config/
 
-Planned (build step 4): configuration for the triage scorer.
-
-Empty until then.
+Empty. Reserved for stage configuration if a later stage needs it.
+Nothing reads this folder today.
