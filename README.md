@@ -51,7 +51,17 @@ Python 3.10 or newer should work; developed and tested on Python 3.14. Only
 the standard library is used. If your system names it `python3`, use that in
 place of `python`.
 
-From the repository root, run the tests:
+Get the code:
+
+```bash
+git clone https://github.com/gorgonized-dork/capture-demo.git
+```
+
+```bash
+cd capture-demo
+```
+
+Run the tests:
 
 ```bash
 python -m unittest
