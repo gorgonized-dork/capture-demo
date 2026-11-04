@@ -1,0 +1,9 @@
+{
+  "disposition": "defer",
+  "owner_role": "capture lead",
+  "date": "2025-12-05",
+  "rationale": "Northgate's June weekend visits were about a third higher than a year earlier (EV-002); Linden Street, whose hours did not change, was up about 2% in September (EV-006); Millbrook extended its hours but stayed nearly flat (EV-005). A field note reports a new housing estate near Northgate that could explain part of its rise, only one independent source supports the hypothesis, and Stonecross is not covered. More validation is needed before committing capture effort.",
+  "supporting_evidence_ids": ["EV-002", "EV-005", "EV-006"],
+  "open_questions": ["Q-DISPROOF", "Q-SECOND-SOURCE", "Q-UNIT-STONECROSS-BRANCH"],
+  "note": "Fictional sample decision. It shows the shape of the record and is not a procurement recommendation."
+}

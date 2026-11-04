@@ -1,0 +1,11 @@
+[
+  {"question_id": "Q-BRIEF-1",
+   "answer": "Northgate extended its weekend hours from 6 April and Millbrook from 31 May. No other branch changed its weekend hours in 2025.",
+   "respondent_role": "district operations staff", "date": "2025-12-03", "provenance": "phone call"},
+  {"question_id": "Q-BASELINE",
+   "answer": "Each branch compares the same calendar months a year apart, counted by the same door counters.",
+   "respondent_role": "branch staff", "date": "2025-12-04", "provenance": "site visit"},
+  {"question_id": "Q-ALTERNATE-EV-002",
+   "answer": "A new housing estate near Northgate began taking residents in May 2025, a month after Sunday opening began.",
+   "respondent_role": "branch staff", "date": "2025-12-04", "provenance": "site visit"}
+]

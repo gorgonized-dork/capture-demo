@@ -12,6 +12,11 @@ invented for testing. They describe no real place, organization, or person.
 - `review_log.json`: five review decisions by a fictional reviewer, named
   by role only. The review log is the only thing that can accept or reject
   evidence.
+- `field_notes.json`: three fictional field notes, each answering one field
+  question, with the respondent named by role only. Field notes are not
+  published sources and never become evidence.
+- `decision.json`: a fictional "defer" decision by a capture lead, to show
+  the shape of the record. It is not a procurement recommendation.
 
 The items are written to exercise the pipeline, not to prove the hypothesis.
 Some support it, one contradicts it, and one reports a branch whose hours
@@ -26,5 +31,13 @@ ledger refusing them: EV-009 quotes Northgate's June figure as 1,980 instead
 of 1,880, and EV-010 tries to mark itself `ACCEPTED`. The review log accepts
 four pieces of evidence, rejects one (a republished report), and leaves
 three unreviewed, so they stay `PROPOSED`.
+
+The sample run raises nine field questions. The field notes answer three;
+one of them reports a possible other cause for Northgate's rise, a new
+housing estate nearby. The decision rests on three accepted pieces of
+evidence and names three questions that are still open.
+
+Real field notes, reviews, and decisions do not belong here: keep them
+under `private/`, which is gitignored.
 
 These files are test fixtures: they change only with explicit approval.

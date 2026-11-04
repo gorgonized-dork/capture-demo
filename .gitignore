@@ -6,6 +6,10 @@
 runs/*
 !runs/README.md
 
+# Real inputs stay local: field notes, reviews, and decisions about real
+# opportunities go under private/. Only the fictional sample is committed.
+private/
+
 # Caches
 __pycache__/
 *.pyc
