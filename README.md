@@ -344,3 +344,7 @@ state/      empty; reserved
 
 Keep real field notes, reviews, and decisions under `private/`, which is
 gitignored.
+
+## License
+
+MIT. See [`LICENSE`](LICENSE).
