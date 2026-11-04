@@ -1,4 +1,4 @@
-# capture-primitives
+# capture-demo
 
 A small, auditable research-to-capture pipeline. You give it a research brief
 (for example, a capture hypothesis and what would disprove it) and a fixed set
