@@ -1,0 +1,17 @@
+[
+  {"evidence_id": "EV-002", "fingerprint": "18946ff0e6c3", "decision": "accept",
+   "reviewer_role": "capture analyst", "date": "2025-12-01",
+   "note": "Door-counter figures for one month at one branch."},
+  {"evidence_id": "EV-005", "fingerprint": "ef679fc432f9", "decision": "accept",
+   "reviewer_role": "capture analyst", "date": "2025-12-01",
+   "note": "Visits nearly flat after the change at this branch."},
+  {"evidence_id": "EV-006", "fingerprint": "802565635112", "decision": "accept",
+   "reviewer_role": "capture analyst", "date": "2025-12-01",
+   "note": "Comparison branch whose hours did not change."},
+  {"evidence_id": "EV-007", "fingerprint": "11fe1ed6e2d8", "decision": "accept",
+   "reviewer_role": "capture analyst", "date": "2025-12-01",
+   "note": "The source says this but gives no figures; a question for the field."},
+  {"evidence_id": "EV-008", "fingerprint": "1073efd992bd", "decision": "reject",
+   "reviewer_role": "capture analyst", "date": "2025-12-01",
+   "note": "Republishes the figures in EV-002 (fx-1002); not independent evidence."}
+]
