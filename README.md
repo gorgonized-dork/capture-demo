@@ -2,20 +2,18 @@
 
 A small, auditable research-to-capture pipeline. You give it a research brief
 (for example, a capture hypothesis and what would disprove it) and a fixed set
-of source items. Today it produces a traceable triage record, an evidence
-ledger in which a person, not the software, accepts or rejects every claim,
-questions to take to the field, and a decision record that a person owns. A
-one-page report is next.
+of source items. It produces a traceable triage record, an evidence ledger in
+which a person, not the software, accepts or rejects every claim, questions to
+take to the field, a decision record that a person owns, and a one-page
+report that is checked against the run's records before it is written.
 
-**Status: early.** Every stage but the report works today: a brief is
-validated, sources are collected offline, every item is triaged with its
-reasons recorded, proposed evidence is checked against its source and waits
-for a person's review, gaps become field questions, and the pursue-or-pass
-call is recorded only as a person entered it. Each run is saved as a frozen,
-traceable record. See [Implemented and next](#implemented-and-next).
+**Status: MVP.** Every stage works on the offline, fictional sample. Live data
+sources and AI-assisted extraction are not built. See
+[Implemented and next](#implemented-and-next).
 
 Everything runs offline on fictional sample data. No credentials, no network,
-nothing to install beyond Python.
+nothing to install beyond Python. To see the output without running anything,
+read [the sample report](sample/expected/report.md).
 
 ## Why this matters for capture
 
@@ -47,7 +45,29 @@ to ask.
 
     Brief -> Collect -> Triage -> Review evidence -> Field questions -> Human decision -> Report
 
-Every stage but Report works today.
+Every stage works today, on the offline sample.
+
+## Read the sample report
+
+[`sample/expected/report.md`](sample/expected/report.md) is the report the
+sample produces; a test keeps it identical to what the code writes. In about
+a minute:
+
+1. **The bottom line comes first.** The status table shows **Defer**, entered
+   by a capture lead, and says the brief's disproof test is not yet checked
+   (Q-DISPROOF is open).
+2. **One source supports the hypothesis, counted once.** EV-002 quotes
+   `fixture:fx-1002`: 1,880 weekend visits against 1,410. Its republication,
+   `fixture:fx-10010` (EV-008), was rejected by the reviewer and is listed
+   under Not counted.
+3. **A challenge sits beside it.** EV-005 (`fixture:fx-1004`): Millbrook also
+   extended its hours and stayed nearly flat. No score combines the two.
+4. **Gaps become questions, not guesses.** Q-SECOND-SOURCE, Q-DISPROOF, and
+   Q-UNIT-STONECROSS-BRANCH are still open. A field note on
+   Q-ALTERNATE-EV-002 reports a new housing estate near Northgate.
+5. **What was refused stays on the record.** EV-009 misquoted 1,880 as 1,980
+   and EV-010 tried to mark itself accepted; both appear under Not counted,
+   with their reasons.
 
 ## Quick start
 
@@ -87,7 +107,16 @@ evidence 8 in ledger: 4 accepted, 1 rejected, 3 awaiting review; 2 refused
 questions 9 asked: 3 answered, 6 open
 decision defer (capture lead, 2025-12-05)
 run      runs/weekend-hours-and-branch-visits-in-harrowmere-valley/
-wrote    brief.json, decision.json, evidence.jsonl, field_questions.json, field_questions.md, refused.jsonl, run.json, sources.jsonl, triage.jsonl
+report   runs/weekend-hours-and-branch-visits-in-harrowmere-valley/report.md (traceability and claim checks passed)
+wrote    brief.json, decision.json, evidence.jsonl, field_questions.json, field_questions.md, refused.jsonl, report.md, run.json, sources.jsonl, triage.jsonl
+```
+
+Check the finished run. This writes nothing; it confirms every file still
+matches the hash recorded when the run was made and that the report is
+unchanged:
+
+```bash
+python -m core.report check runs/weekend-hours-and-branch-visits-in-harrowmere-valley
 ```
 
 Every flag after `--adapter` is optional, and every input file is only ever
@@ -111,7 +140,8 @@ runs/weekend-hours-and-branch-visits-in-harrowmere-valley/
 ├── refused.jsonl         every proposal, review, field note, or decision refused, and why
 ├── field_questions.json  questions still to ask, why each matters, and any field-note answer
 ├── field_questions.md    the same questions as a readable page, open ones first
-└── decision.json         the decision a person entered, or "undecided" and why
+├── decision.json         the decision a person entered, or "undecided" and why
+└── report.md             one readable page, written last, after its checks pass
 ```
 
 Run output stays on your machine: everything in `runs/` except its README is
@@ -162,6 +192,21 @@ rest only on accepted evidence and list only open questions, and it carries
 no score or probability. Anything wrong refuses the whole decision, and the
 run records "undecided" instead.
 
+## The report
+
+The report is written last, from the run's files rather than from memory,
+and only after two checks pass:
+
+- **Traceability:** every file matches the SHA-256 recorded in `run.json`,
+  every evidence, source, and question id in the report resolves to a record
+  in the run, and every accepted excerpt appears word for word in its source.
+- **Claim integrity:** the findings name only accepted evidence, and the
+  decision shown is the one recorded.
+
+A failed check is reported, not fixed: no report is written, and `run.json`
+records the failures. Missing source fields print as "unverified", and each
+source is counted once.
+
 ## The sample
 
 All ten items are invented. The pipeline collects every one of them with its
@@ -195,7 +240,7 @@ regions, units), `exclude_terms`, and `questions`.
 
 ## Guardrails
 
-**In place today**
+Each of these is enforced in code and covered by the tests.
 
 - **The software proposes; a person decides.** Evidence enters the ledger
   only as `PROPOSED`. A proposal that sets its own status is refused
@@ -208,14 +253,21 @@ regions, units), `exclude_terms`, and `questions`.
 - **The software asks; it never answers.** Field questions start open, and
   only a field note can answer one. Field notes name respondents by role and
   never become sources or evidence.
+- **The report cannot say more than the record.** It is written from the
+  run's files, only after its traceability and claim-integrity checks pass,
+  and `python -m core.report check` re-verifies a finished run at any time.
 - **Quotes must match.** Every claim carries an excerpt that must appear word
   for word in its source, or the proposal is refused. One changed digit is
   enough (EV-009).
+- **Repeats are not confirmation.** Triage flags repeated figures, the ledger
+  marks evidence from a repeating source as not independent (EV-008), and
+  the report counts each source once.
 - **Contradictions stay visible.** Supporting and challenging evidence sit
   side by side (EV-002 and EV-005). There is no combined score.
 - **Missing stays missing.** A field a source leaves out is stored as empty,
-  never guessed. `fx-1008` names no branch or region and keeps none; triage
-  sends it to review, and a field question asks which branches it covers.
+  never guessed, and the report prints it as "unverified". `fx-1008` names no
+  branch or region; triage sends it to review, and a field question asks
+  which branches it covers.
 - **Every item gets a recorded reason.** Triage includes, excludes, or sends
   each item to review, and records every rule that fired. Excluded items keep
   their records, so nothing disappears silently.
@@ -223,7 +275,8 @@ regions, units), `exclude_terms`, and `questions`.
   `fixture:fx-1001` and `fixture:fx-10010` stay two separate items.
 - **Untestable hypotheses are flagged.** A hypothesis with no disproof
   condition is accepted but marked `UNTESTED_HYPOTHESIS` for the whole run,
-  and a field question asks what would disprove it.
+  a field question asks what would disprove it, and the report says it is
+  untested.
 - **Runs are records.** Each run keeps a byte-for-byte copy of its brief and
   the hash of every file it read or wrote. A run folder is never overwritten,
   and no input file is ever written to.
@@ -232,12 +285,6 @@ regions, units), `exclude_terms`, and `questions`.
   stops the read instead of being skipped.
 - **The source is chosen explicitly.** The only source today is a local
   fixture file; nothing reaches the network.
-
-**Being built**
-
-- **Repeats are not confirmation.** Triage flags repeated figures, and the
-  ledger marks evidence from a repeating source as not independent (EV-008).
-  The report will count it once.
 
 ## Implemented and next
 
@@ -250,7 +297,7 @@ regions, units), `exclude_terms`, and `questions`.
 | Evidence ledger with human review | Implemented | `core/ledger.py` |
 | Field questions | Implemented | `core/questions.py` |
 | Human decision record | Implemented | `core/decision.py` |
-| Report | Next | |
+| Report with traceability and claim-integrity checks | Implemented | `core/report.py` |
 
 Not in this version: live data sources, AI-assisted extraction, dashboards,
 databases, or multi-user review. A live public-source adapter (the DVIDS
@@ -265,6 +312,8 @@ needed for the pipeline to make its point.
   caused another.
 - `ACCEPTED` means a person found that the excerpt supports the claim as
   worded. It is not a finding that the claim is true.
+- The report's checks show that the report matches the run's records. They
+  do not show that the records are true.
 - Field questions come from fixed rules. They catch known kinds of gap, not
   every gap. A field-note answer records what a respondent said; it is not a
   verified fact.
@@ -283,10 +332,11 @@ needed for the pipeline to make its point.
 ## Repository layout
 
 ```
-core/       brief, run folders, triage, evidence ledger, field questions, decision, the pipeline command
+core/       brief, run folders, triage, evidence ledger, field questions, decision, report, the pipeline command
 adapters/   source adapters (an offline fixture today)
 sample/     the fictional brief, source items, proposals, review log, field notes, and decision
-tests/      the guardrails in place today, written as tests
+sample/expected/  the report the sample produces, kept identical by a test
+tests/      the guardrails above, written as tests
 runs/       run output (gitignored)
 config/     empty; reserved
 state/      empty; reserved

@@ -17,6 +17,8 @@ invented for testing. They describe no real place, organization, or person.
   published sources and never become evidence.
 - `decision.json`: a fictional "defer" decision by a capture lead, to show
   the shape of the record. It is not a procurement recommendation.
+- `expected/report.md`: the report the pipeline writes for this sample,
+  kept identical to the code's output by a test.
 
 The items are written to exercise the pipeline, not to prove the hypothesis.
 Some support it, one contradicts it, and one reports a branch whose hours
