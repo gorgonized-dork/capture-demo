@@ -32,6 +32,13 @@ Each `runs/<run-id>/` holds, today:
 - `field_questions.md`: the same questions as a readable page, open ones first
 - `decision.json`: the decision a person entered, or `undecided` with the
   reason
+- `report.md`: one readable page, written last from the files above, and
+  only after its traceability and claim-integrity checks pass. If a check
+  fails, no report is written and `run.json` records the failures.
+
+Check a finished run at any time; this writes nothing:
+
+    python -m core.report check runs/<run-id>
 
 `evidence.jsonl` and `refused.jsonl` are written empty when nothing was
 proposed or refused.
@@ -41,5 +48,3 @@ never overwritten; pass `--run-id <new-id>` to start a separate run.
 
 Everything in `runs/` except this README is gitignored, because a run holds
 full source text. Deliberate synthetic examples belong under `sample/expected/`.
-
-Planned: the report.

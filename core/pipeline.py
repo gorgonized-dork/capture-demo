@@ -8,14 +8,16 @@ Pipeline: one command from a research brief to a run folder.
 Today the pipeline validates the brief, collects source items through the
 chosen adapter, writes a snapshot of every item it collected, triages each
 one against the brief, builds the evidence ledger from the proposals and the
-review log, asks field questions and applies the field notes, and records
-the decision a person entered, or undecided. The report is not built yet.
+review log, asks field questions and applies the field notes, records the
+decision a person entered (or undecided), and last writes the report from
+the files it just wrote, if the report's checks pass.
 
 The adapter is always chosen explicitly. A failure before the run folder is
 created (an invalid brief, an unreadable input file, an adapter error) leaves
 nothing behind, and an existing run folder is never overwritten. The
 proposals, review log, field notes, and decision are only read, never
-written.
+written. If a report check fails, the run keeps its files, run.json records
+the report as blocked with the failures, and no report is written.
 """
 import argparse
 import dataclasses
@@ -26,7 +28,7 @@ from pathlib import Path
 
 from adapters.fixture import FixtureAdapter
 from core import brief as briefs
-from core import decision, ledger, questions, triage
+from core import decision, ledger, questions, report, triage
 from core.runs import RUNS_DIR, RunError, RunExistsError, create_run
 
 ADAPTERS = {"fixture": FixtureAdapter}
@@ -39,7 +41,7 @@ QUESTIONS_FILE = "field_questions.json"
 QUESTIONS_MD = "field_questions.md"
 DECISION_FILE = "decision.json"
 RUN_FILES = ("brief.json", "run.json", SOURCES_FILE, TRIAGE_FILE, EVIDENCE_FILE, REFUSED_FILE,
-             QUESTIONS_FILE, QUESTIONS_MD, DECISION_FILE)
+             QUESTIONS_FILE, QUESTIONS_MD, DECISION_FILE, report.REPORT_FILE)
 
 
 class PipelineError(Exception):
@@ -111,6 +113,17 @@ def run(brief_path, adapter, runs_dir=RUNS_DIR, run_id=None, proposals_path=None
         "decision_sha256": decision_sha256,
     }
     record_path.write_text(json.dumps(record, indent=2) + "\n", encoding="utf-8")
+
+    # The report is rendered last, from the files just written, and only if its checks pass.
+    try:
+        report_sha256 = report.write(run_dir)
+    except report.ReportBlocked as blocked:
+        record["report"] = {"status": "blocked", "failures": blocked.failures}
+        record_path.write_text(json.dumps(record, indent=2) + "\n", encoding="utf-8")
+        raise
+    record["report"] = {"status": "written", "checks": "passed",
+                        "report_file": report.REPORT_FILE, "report_sha256": report_sha256}
+    record_path.write_text(json.dumps(record, indent=2) + "\n", encoding="utf-8")
     return run_dir
 
 
@@ -149,7 +162,7 @@ def main(argv=None):
     ap = argparse.ArgumentParser(prog="python -m core.pipeline",
                                  description="Run the pipeline on a research brief.")
     sub = ap.add_subparsers(dest="command", required=True)
-    cmd = sub.add_parser("run", help="brief -> collect -> triage -> evidence -> questions -> decision")
+    cmd = sub.add_parser("run", help="brief -> collect -> triage -> evidence -> questions -> decision -> report")
     cmd.add_argument("--brief", type=Path, required=True, help="research brief (JSON)")
     cmd.add_argument("--adapter", choices=sorted(ADAPTERS), required=True,
                      help="source adapter; 'fixture' reads sample/items.json offline")
@@ -172,6 +185,11 @@ def main(argv=None):
     except RunExistsError as e:
         print(f"ERROR  {e}")
         print("       pass --run-id <new-id> to start a separate run")
+        return 1
+    except report.ReportBlocked as blocked:
+        print("ERROR  report blocked; no report was written. Failed checks:")
+        for failure in blocked.failures:
+            print(f"       {failure['code']}: {failure['detail']}")
         return 1
     except (OSError, briefs.BriefError, ledger.LedgerError, decision.DecisionError,
             RunError, PipelineError) as e:
@@ -203,6 +221,7 @@ def main(argv=None):
     else:
         print(f"decision undecided: {recorded['reason']}")
     print(f"run      {display(run_dir)}/")
+    print(f"report   {display(run_dir / report.REPORT_FILE)} (traceability and claim checks passed)")
     print(f"wrote    {', '.join(sorted(p.name for p in run_dir.iterdir()))}")
     return 0
 
