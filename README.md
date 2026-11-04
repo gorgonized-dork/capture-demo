@@ -2,17 +2,17 @@
 
 A small, auditable research-to-capture pipeline. You give it a research brief
 (for example, a capture hypothesis and what would disprove it) and a fixed set
-of source items. Today it produces a traceable triage record and an evidence
-ledger in which a person, not the software, accepts or rejects every claim.
-It is being built to add questions to validate in the field, a decision
-record that a person owns, and a one-page report.
+of source items. Today it produces a traceable triage record, an evidence
+ledger in which a person, not the software, accepts or rejects every claim,
+questions to take to the field, and a decision record that a person owns. A
+one-page report is next.
 
-**Status: early.** The first stages work today: a brief is validated, sources
-are collected offline, every item is triaged with its reasons recorded,
-proposed evidence is checked against its source and waits for a person's
-review, and each run is saved as a frozen, traceable record. Field questions,
-the decision record, and the report are next. See
-[Implemented and next](#implemented-and-next).
+**Status: early.** Every stage but the report works today: a brief is
+validated, sources are collected offline, every item is triaged with its
+reasons recorded, proposed evidence is checked against its source and waits
+for a person's review, gaps become field questions, and the pursue-or-pass
+call is recorded only as a person entered it. Each run is saved as a frozen,
+traceable record. See [Implemented and next](#implemented-and-next).
 
 Everything runs offline on fictional sample data. No credentials, no network,
 nothing to install beyond Python.
@@ -38,16 +38,16 @@ and that could become an opportunity worth pursuing. Before committing
 capture effort, the vendor writes down the hypothesis (longer hours raised
 weekend visits) and what would disprove it, then checks it against ten short,
 invented news bulletins. Some support it, one contradicts it, one repeats
-another, and one claims a rise without any figures. The answer the sample is
-built to reach is "not yet": mixed evidence, thin comparison data, and
-specific questions to ask before deciding.
+another, and one claims a rise without any figures. A field visit turns up
+another possible cause for the one rise. The fictional capture lead decides
+"defer": mixed evidence, thin comparison data, and specific questions still
+to ask.
 
 ## The path
 
     Brief -> Collect -> Triage -> Review evidence -> Field questions -> Human decision -> Report
 
-Brief, Collect, Triage, and Review evidence work today. The remaining stages
-are being built in order.
+Every stage but Report works today.
 
 ## Quick start
 
@@ -74,7 +74,7 @@ python -m unittest
 Run the sample:
 
 ```bash
-python -m core.pipeline run --brief sample/brief.json --adapter fixture --proposals sample/proposed_evidence.json --reviews sample/review_log.json
+python -m core.pipeline run --brief sample/brief.json --adapter fixture --proposals sample/proposed_evidence.json --reviews sample/review_log.json --field-notes sample/field_notes.json --decision sample/decision.json
 ```
 
 Expected output:
@@ -84,28 +84,34 @@ brief    sample/brief.json: valid
 adapter  fixture (offline): 10 items
 triage   5 included, 2 to review, 3 excluded
 evidence 8 in ledger: 4 accepted, 1 rejected, 3 awaiting review; 2 refused
+questions 9 asked: 3 answered, 6 open
+decision defer (capture lead, 2025-12-05)
 run      runs/weekend-hours-and-branch-visits-in-harrowmere-valley/
-wrote    brief.json, evidence.jsonl, refused.jsonl, run.json, sources.jsonl, triage.jsonl
+wrote    brief.json, decision.json, evidence.jsonl, field_questions.json, field_questions.md, refused.jsonl, run.json, sources.jsonl, triage.jsonl
 ```
 
-`--proposals` and `--reviews` are optional; without them the run stops after
-triage. Running the same command again is refused, so an earlier run is never
-overwritten. To run the sample again, give the new run its own id:
+Every flag after `--adapter` is optional, and every input file is only ever
+read. Without `--decision`, the run records "undecided". Running the same
+command again is refused, so an earlier run is never overwritten. To run the
+sample again, give the new run its own id:
 
 ```bash
-python -m core.pipeline run --brief sample/brief.json --adapter fixture --proposals sample/proposed_evidence.json --reviews sample/review_log.json --run-id second-look
+python -m core.pipeline run --brief sample/brief.json --adapter fixture --proposals sample/proposed_evidence.json --reviews sample/review_log.json --field-notes sample/field_notes.json --decision sample/decision.json --run-id second-look
 ```
 
 ## What a run produces
 
 ```
 runs/weekend-hours-and-branch-visits-in-harrowmere-valley/
-├── brief.json      the brief, copied byte for byte and frozen for this run
-├── run.json        run id, flags, counts, and the SHA-256 of every file read or written
-├── sources.jsonl   every collected item exactly as returned, with a hash of its text
-├── triage.jsonl    every item's triage status, each rule that fired, and why
-├── evidence.jsonl  the evidence ledger: claim, verbatim excerpt, stance, review status
-└── refused.jsonl   every proposal or review the ledger refused, and why
+├── brief.json            the brief, copied byte for byte and frozen for this run
+├── run.json              run id, flags, counts, and the SHA-256 of every file read or written
+├── sources.jsonl         every collected item exactly as returned, with a hash of its text
+├── triage.jsonl          every item's triage status, each rule that fired, and why
+├── evidence.jsonl        the evidence ledger: claim, verbatim excerpt, stance, review status
+├── refused.jsonl         every proposal, review, field note, or decision refused, and why
+├── field_questions.json  questions still to ask, why each matters, and any field-note answer
+├── field_questions.md    the same questions as a readable page, open ones first
+└── decision.json         the decision a person entered, or "undecided" and why
 ```
 
 Run output stays on your machine: everything in `runs/` except its README is
@@ -134,6 +140,28 @@ review.
 `ACCEPTED` means a person checked that the excerpt says what the claim says
 and that the stance fits. It does not make the claim true.
 
+## Field questions and the decision
+
+The pipeline asks; it never answers. Field questions come from the brief's
+own questions and from fixed rules over accepted evidence: the brief's
+disproof test, the baseline behind any comparison, other possible causes of
+a supporting finding, the need for a second independent source, claims that
+cannot be checked as stated, sources with no region or unit, and units in
+scope that no evidence covers. Each question says why it matters and which
+evidence it links to.
+
+Only a field note ([`sample/field_notes.json`](sample/field_notes.json)) can
+answer a question. A note names its respondent by role, never by name, and
+says how the answer was obtained. Answers stay with their questions, labeled
+as field notes; they never become sources or evidence.
+
+The decision ([`sample/decision.json`](sample/decision.json)) is entered by a
+person: pursue, defer, pass, or undecided, with their role, the date, a
+rationale, the evidence it rests on, and the questions still open. It may
+rest only on accepted evidence and list only open questions, and it carries
+no score or probability. Anything wrong refuses the whole decision, and the
+run records "undecided" instead.
+
 ## The sample
 
 All ten items are invented. The pipeline collects every one of them with its
@@ -151,6 +179,15 @@ proposals are wrong on purpose, to show the ledger refusing them.
 | fx-1008 | The district says visits rose, with no figures and no branch | To review: no branch or region given | EV-007: unresolved, accepted as a claim without figures |
 | fx-1005, fx-1006, fx-1009 | A book sale; a 2024 board discussion; car park resurfacing | Excluded: exclude term; dated 2024; no seed term | None; set aside at triage |
 
+From the accepted evidence the pipeline raises nine field questions,
+including the baseline behind each comparison, whether the brief's disproof
+condition holds, what else could explain Northgate's rise, and what
+Stonecross Branch's records show. Three fictional field notes answer three of
+them; one reports a new housing estate near Northgate, a possible other cause
+of its rise. The fictional capture lead's decision is "defer", resting on
+EV-002, EV-005, and EV-006, with three questions still open. It is there to
+show the shape of the record and is not a procurement recommendation.
+
 The brief behind the sample is [`sample/brief.json`](sample/brief.json). A
 brief has a `title`, a `type` (`hypothesis` or `topic`), a `statement`,
 `seed_terms`, and optionally a `disproof` condition, a `scope` (date range,
@@ -164,6 +201,13 @@ regions, units), `exclude_terms`, and `questions`.
   only as `PROPOSED`. A proposal that sets its own status is refused
   (EV-010). Only the review log, written by a person, accepts or rejects,
   and a review counts only for the exact content it reviewed.
+- **A person owns the decision.** Pursue, defer, pass, or undecided is
+  entered by a person and may rest only on accepted evidence. With no
+  decision, or a refused one, the run records "undecided". There is no
+  win-probability score; a decision that carries one is refused.
+- **The software asks; it never answers.** Field questions start open, and
+  only a field note can answer one. Field notes name respondents by role and
+  never become sources or evidence.
 - **Quotes must match.** Every claim carries an excerpt that must appear word
   for word in its source, or the proposal is refused. One changed digit is
   enough (EV-009).
@@ -171,20 +215,21 @@ regions, units), `exclude_terms`, and `questions`.
   side by side (EV-002 and EV-005). There is no combined score.
 - **Missing stays missing.** A field a source leaves out is stored as empty,
   never guessed. `fx-1008` names no branch or region and keeps none; triage
-  sends it to review instead of dropping it.
+  sends it to review, and a field question asks which branches it covers.
 - **Every item gets a recorded reason.** Triage includes, excludes, or sends
   each item to review, and records every rule that fired. Excluded items keep
   their records, so nothing disappears silently.
 - **Exact identities.** Source ids are compared whole, never by substring, so
   `fixture:fx-1001` and `fixture:fx-10010` stay two separate items.
 - **Untestable hypotheses are flagged.** A hypothesis with no disproof
-  condition is accepted but marked `UNTESTED_HYPOTHESIS` for the whole run.
+  condition is accepted but marked `UNTESTED_HYPOTHESIS` for the whole run,
+  and a field question asks what would disprove it.
 - **Runs are records.** Each run keeps a byte-for-byte copy of its brief and
   the hash of every file it read or wrote. A run folder is never overwritten,
-  and the proposals and review log are never written to.
-- **Fail closed.** An invalid brief, an unreadable proposals or review file,
-  or a broken source stops the run before anything is written. A malformed
-  source record stops the read instead of being skipped.
+  and no input file is ever written to.
+- **Fail closed.** An invalid brief, an unreadable input file, or a broken
+  source stops the run before anything is written. A malformed source record
+  stops the read instead of being skipped.
 - **The source is chosen explicitly.** The only source today is a local
   fixture file; nothing reaches the network.
 
@@ -193,10 +238,6 @@ regions, units), `exclude_terms`, and `questions`.
 - **Repeats are not confirmation.** Triage flags repeated figures, and the
   ledger marks evidence from a repeating source as not independent (EV-008).
   The report will count it once.
-- **A person owns the decision.** Pursue, defer, pass, or undecided is
-  entered by a person, with the evidence it rests on. There is no
-  win-probability score and no automatic bid decision. If no decision has
-  been entered, the report says "undecided".
 
 ## Implemented and next
 
@@ -207,8 +248,8 @@ regions, units), `exclude_terms`, and `questions`.
 | One command: run folder and source snapshot | Implemented | `core/pipeline.py`, `core/runs.py` |
 | Triage with a stated reason for every item | Implemented | `core/triage.py` |
 | Evidence ledger with human review | Implemented | `core/ledger.py` |
-| Field questions | Next | |
-| Human decision record | Next | |
+| Field questions | Implemented | `core/questions.py` |
+| Human decision record | Implemented | `core/decision.py` |
 | Report | Next | |
 
 Not in this version: live data sources, AI-assisted extraction, dashboards,
@@ -224,6 +265,9 @@ needed for the pipeline to make its point.
   caused another.
 - `ACCEPTED` means a person found that the excerpt supports the claim as
   worded. It is not a finding that the claim is true.
+- Field questions come from fixed rules. They catch known kinds of gap, not
+  every gap. A field-note answer records what a respondent said; it is not a
+  verified fact.
 - Duplicate detection compares figures. It misses a reworded repeat that
   gives no figures, and it flags two different reports that quote the same
   figures; either way, the cost is a review, never a silent drop.
@@ -232,17 +276,21 @@ needed for the pipeline to make its point.
 - Today there is one offline source and no AI step of any kind. The sample's
   evidence proposals are written by hand; nothing extracts evidence
   automatically.
-- Every person, organization, place, and figure in the sample is fictional.
-  Nothing here describes a real customer, contract, or live government use.
+- Every person, organization, place, and figure in the sample is fictional,
+  and the sample decision is not a procurement recommendation. Nothing here
+  describes a real customer, contract, or live government use.
 
 ## Repository layout
 
 ```
-core/       brief validation, run folders, triage, the evidence ledger, the pipeline command
+core/       brief, run folders, triage, evidence ledger, field questions, decision, the pipeline command
 adapters/   source adapters (an offline fixture today)
-sample/     the fictional brief, source items, evidence proposals, and review log
+sample/     the fictional brief, source items, proposals, review log, field notes, and decision
 tests/      the guardrails in place today, written as tests
 runs/       run output (gitignored)
 config/     empty; reserved
 state/      empty; reserved
 ```
+
+Keep real field notes, reviews, and decisions under `private/`, which is
+gitignored.
