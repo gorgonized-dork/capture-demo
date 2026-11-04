@@ -133,7 +133,7 @@ def _check_proposal(proposal, sources, screened, seen):
     if unknown:
         return (UNKNOWN_FIELD, f"unknown field(s) {unknown}")
     for name in PROPOSAL_FIELDS:
-        if not _is_text(proposal.get(name)):
+        if not is_text(proposal.get(name)):
             return (MISSING_FIELD, f"'{name}' is required and must be non-empty text")
     if proposal["stance"] not in STANCES:
         return (INVALID_STANCE, f"stance '{proposal['stance']}' is not one of: {', '.join(STANCES)}")
@@ -156,13 +156,13 @@ def _check_review(review, by_id):
     if unknown:
         return (UNKNOWN_FIELD, f"unknown field(s) {unknown}")
     for name in REVIEW_REQUIRED:
-        if not _is_text(review.get(name)):
+        if not is_text(review.get(name)):
             return (MISSING_FIELD, f"'{name}' is required and must be non-empty text")
     if review.get("note") is not None and not isinstance(review["note"], str):
         return (MISSING_FIELD, "'note' must be text when given")
     if review["decision"] not in DECISIONS:
         return (INVALID_DECISION, f"decision '{review['decision']}' is not one of: {', '.join(DECISIONS)}")
-    if not _is_date(review["date"]):
+    if not is_date(review["date"]):
         return (BAD_DATE, f"date '{review['date']}' must be a real date written YYYY-MM-DD")
 
     entry = by_id.get(review["evidence_id"])
@@ -201,11 +201,11 @@ def _refusal(kind, position, ident, problem, record):
             "code": code, "detail": detail, "record": record}
 
 
-def _is_text(value):
+def is_text(value):
     return isinstance(value, str) and value.strip() != ""
 
 
-def _is_date(value):
+def is_date(value):
     if not DATE_RE.match(value):
         return False
     try:
