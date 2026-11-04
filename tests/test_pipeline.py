@@ -51,8 +51,7 @@ class SampleRun(TempRuns):
     def test_writes_brief_record_and_snapshot_into_one_folder(self):
         run_dir = self.run_sample()
         self.assertEqual([p.name for p in self.runs_dir.iterdir()], [SAMPLE_SLUG])
-        self.assertEqual(sorted(p.name for p in run_dir.iterdir()),
-                         ["brief.json", "run.json", "sources.jsonl"])
+        self.assertEqual(sorted(p.name for p in run_dir.iterdir()), sorted(pipeline.RUN_FILES))
 
     def test_snapshot_holds_every_item_in_order_with_exact_ids(self):
         run_dir = self.run_sample()
